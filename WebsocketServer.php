@@ -13,6 +13,10 @@ class WebsocketServer
 
     private $config = [];
 
+    public  static $from_id;
+
+    public  static $to_id;
+
     public static $message = [];
 
     public function __construct()
@@ -21,7 +25,9 @@ class WebsocketServer
         $this->config = $config;
 
         $this->_server = new Swoole\Websocket\Server($this->config['base']['host'], $this->config['base']['port']);
+
         $this->_server->set($this->config['swoole']);
+
 
         $this->_server->on('Open', [$this, 'onOpen']);
 
@@ -44,12 +50,37 @@ class WebsocketServer
         }else{
             //先绑定uid与fd
             $this->bindUid(['id' => $req->get['id'], 'name' => ''], $req->fd);
+            self::$from_id = $req->get['id'];
             $this->showData();
         }
+//        $server->push($frame->fd, json_encode(['toid' => 'system', 'content'=> '连接成功']));
+    }
+
+    protected  function connect_mysql()
+    {
+        $link = mysqli_connect('localhost','root','654321');
+        if(!$link){
+            exit('数据库连接失败');
+        }
+        mysqli_set_charset($link,'utf8');
+        mysqli_select_db($link,'swoole');
+        return $link;
+    }
+
+    protected function ecex_sql($from_id,$to_id,$content)
+    {
+        $link = $this->connect_mysql();
+        $sql = "insert into message(from_id,to_id,content) values ($from_id,$to_id,$content)";
+        $result = mysqli_query($link,$sql);
+        $res = mysqli_fetch_assoc($result);
+        mysqli_close($link);
+        return $res;
     }
 
     public function onMessage($server, $frame)
     {
+//        $result = json_decode($frame->data, true);
+//        $server->push($frame->fd, json_encode(['toid' => 'system', 'content'=> 'from_id:'.self::$from_id."; to_id:".$result['toid'] ]));die;
         if (!empty($server)) {
             $result = json_decode($frame->data, true);
             if(isset($result['type'])) {

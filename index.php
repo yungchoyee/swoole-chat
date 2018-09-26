@@ -146,7 +146,7 @@ require_once __DIR__."/config.php";
 if (!isset($_GET['id']) || empty($_GET['id']) || empty((int)$_GET['id']) ) {
     ?>
     <div id="home">
-        <input type="number" placeholder="您的QQ号码" id = "qq">
+        <input type="number" placeholder="您的ID" id = "qq">
         <button onclick="qqGo()">确定!</button>
     </div>
     <script>
@@ -211,9 +211,11 @@ if (!isset($_GET['id']) || empty($_GET['id']) || empty((int)$_GET['id']) ) {
     var socket = new WebSocket('ws://<?php echo $config['base']['host']; ?>:<?php echo $config['base']['port']; ?>?id=<?php echo $_GET['id']; ?>&type=chat')
     // 打开Socket
     socket.onopen = function (event) {
+        console.log('连接成功');
     };
     //收到信息
     socket.onmessage = function (event) {
+        console.log('收到消息');
         var data = JSON.parse(event.data)
         var list = document.getElementById("lists")
         var toidObj = document.getElementById("toid")
@@ -227,6 +229,7 @@ if (!isset($_GET['id']) || empty($_GET['id']) || empty((int)$_GET['id']) ) {
     };
     //关闭连接通知
     socket.onclose = function (event) {
+        console.log('连接断开');
         var obj = document.getElementById('online')
         obj.innerHTML = 'offline <a id="tpointer" onclick="tryAgain()">click me to try again</a>'
         obj.setAttribute('id', 'Offline')
@@ -238,11 +241,12 @@ if (!isset($_GET['id']) || empty($_GET['id']) || empty((int)$_GET['id']) ) {
 
     //发送消息
     function sendMessage() {
+        console.log('发出消息');
         var obj = document.getElementById('content')
         var content = obj.value
         var toidObj = document.getElementById("toid")
         var toid = toidObj.value
-        socket.send('{"toid": "' + toid + '", "content": "' + content + '", "type": "chat"}')
+        socket.send('{"toid": "' + toid + '", "fromid":"2", "content": "' + content + '", "type": "chat"}')
         var list = document.getElementById("lists")
         //添加 li
         var li = document.createElement("li")
